@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 /// Manages the [CropController] and transitions the
 /// image from raw file to a cropped version.
 class CropProvider with ChangeNotifier {
-  final CropController controller = CropController(aspectRatio: 4.0 / 3.0);
+  final CropController controller = CropController();
   bool _isProcessing = false;
 
   bool get isProcessing => _isProcessing;

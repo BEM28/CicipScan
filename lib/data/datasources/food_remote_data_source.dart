@@ -65,6 +65,7 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
     String? area;
     String? imageUrl;
     String? youtubeUrl;
+    String? mealName;
     List<IngredientItem>? mealDbIngredients;
     List<String>? mealDbInstructions;
 
@@ -79,6 +80,7 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
         if (data['meals'] != null && (data['meals'] as List).isNotEmpty) {
           final meal = data['meals'][0];
 
+          mealName = meal['strMeal'];
           category = meal['strCategory'];
           area = meal['strArea'];
           imageUrl = meal['strMealThumb'];
@@ -153,7 +155,7 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
               [];
 
           return FoodDetailModel(
-            name: aiData['name'] ?? label,
+            name: mealName ?? aiData['name'] ?? label,
             description:
                 aiData['description'] ??
                 'A freshly prepared serving of $label.',
@@ -197,7 +199,7 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
 
     // 3. Ultimate Fallback
     return FoodDetailModel(
-      name: label,
+      name: mealName ?? label,
       description:
           'A freshly prepared serving of $label. This description is generated as dummy data.',
       calories: 320,

@@ -134,6 +134,7 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
                 displayImage: displayImage,
                 displayScore: displayScore,
                 theme: theme,
+                secondaryImageUrl: foodDetail.imageUrl,
               ),
               const SizedBox(height: 28),
               Padding(
@@ -199,12 +200,25 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    _buildTabItem(context, 'Overview', 0, selectedTabIndex),
-                    _buildTabItem(context, 'Ingredients', 1, selectedTabIndex),
-                    _buildTabItem(context, 'Instructions', 2, selectedTabIndex),
-                  ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildTabItem(context, 'Overview', 0, selectedTabIndex),
+                      _buildTabItem(
+                        context,
+                        'Ingredients',
+                        1,
+                        selectedTabIndex,
+                      ),
+                      _buildTabItem(
+                        context,
+                        'Instructions',
+                        2,
+                        selectedTabIndex,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -310,7 +324,7 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
         context.read<ResultProvider>().setTabIndex(index);
       },
       child: Padding(
-        padding: const EdgeInsets.only(right: 32),
+        padding: const EdgeInsets.only(right: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -318,6 +332,7 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
               title,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: active ? AppTheme.primary : Colors.grey[400],
+                fontWeight: active ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             const SizedBox(height: 6),
@@ -358,43 +373,127 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
 // EXTRACTED WIDGETS
 // ───────────────────────────────────────────────────
 
-class _ImageHeader extends StatelessWidget {
+class _ImageHeader extends StatefulWidget {
   final ImageProvider displayImage;
   final String displayScore;
   final ThemeData theme;
+  final String? secondaryImageUrl;
 
   const _ImageHeader({
     required this.displayImage,
     required this.displayScore,
     required this.theme,
+    this.secondaryImageUrl,
   });
 
   @override
+  State<_ImageHeader> createState() => _ImageHeaderState();
+}
+
+class _ImageHeaderState extends State<_ImageHeader> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
+    final List<Widget> pages = [
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.8),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(40),
+            bottomRight: Radius.circular(40),
+          ),
+          image: DecorationImage(
+            image: widget.displayImage,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    ];
+
+    if (widget.secondaryImageUrl != null &&
+        widget.secondaryImageUrl!.isNotEmpty) {
+      pages.add(
         Container(
-          height: 350,
-          width: double.infinity,
           decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.8),
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(40),
               bottomRight: Radius.circular(40),
             ),
-            image: DecorationImage(image: displayImage, fit: BoxFit.cover),
+            image: DecorationImage(
+              image: NetworkImage(widget.secondaryImageUrl!),
+              fit: BoxFit.contain,
+            ),
           ),
         ),
+      );
+    }
+
+    return Stack(
+      children: [
+        SizedBox(
+          height: 350,
+          width: double.infinity,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(40),
+              bottomRight: Radius.circular(40),
+            ),
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              children: pages,
+            ),
+          ),
+        ),
+        if (pages.length > 1)
+          Positioned(
+            bottom: 90,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(pages.length, (index) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _currentPage == index ? 12 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _currentPage == index
+                        ? AppTheme.primary
+                        : Colors.white.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                );
+              }),
+            ),
+          ),
         Positioned(
           bottom: 25,
           right: 25,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.95),
+              color: widget.theme.colorScheme.surface.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+                  color: widget.theme.colorScheme.onSurface.withValues(
+                    alpha: 0.15,
+                  ),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -406,8 +505,11 @@ class _ImageHeader extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('CONFIDENCE', style: theme.textTheme.bodySmall),
-                    Text(displayScore, style: theme.textTheme.bodyLarge),
+                    Text('CONFIDENCE', style: widget.theme.textTheme.bodySmall),
+                    Text(
+                      widget.displayScore,
+                      style: widget.theme.textTheme.bodyLarge,
+                    ),
                   ],
                 ),
                 const SizedBox(width: 14),
