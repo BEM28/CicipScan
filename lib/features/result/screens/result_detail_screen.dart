@@ -68,7 +68,7 @@ class _ResultDetailScreenState extends State<ResultDetailScreen> {
         ? FileImage(File(widget.scanResult!.imagePath)) as ImageProvider
         : (imageProvider.image != null
               ? FileImage(imageProvider.image!) as ImageProvider
-              : const AssetImage(AppImages.nasiLemak));
+              : const AssetImage(AppImages.logo));
 
     final String displayScore = widget.scanResult != null
         ? widget.scanResult!.score
